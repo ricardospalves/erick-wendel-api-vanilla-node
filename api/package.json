@@ -4,11 +4,12 @@
   "description": "API em Node.js sem frameworks do Erick Wendel.",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev ./src/server.ts",
+    "dev": "ts-node-dev --transpile-only ./src/server.ts",
     "build": "tsc",
     "start": "node ./build/server.js",
     "lint": "eslint src --ext .ts",
-    "lint:fix": "npm run lint -- --fix"
+    "lint:fix": "npm run lint -- --fix",
+    "test": "sh script.sh"
   },
   "keywords": [],
   "author": "Ricardo Alves <ricardospalves@gmail.com>",
