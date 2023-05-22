@@ -1,7 +1,7 @@
-import http from 'node:http'
+import { IncomingMessage } from 'node:http'
 
 declare module 'node:http' {
-  interface IncomingMessage extends http.IncomingMessage {
+  interface IncomingMessage {
     queryString: { id?: string }
   }
 }
