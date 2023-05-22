@@ -16,6 +16,7 @@ const routes = {
     response: ServerResponse<IncomingMessage>,
   ) => {
     const { id } = request.queryString
+    // await Promise.reject('/players:get')
     const players = await playerService.find(id)
 
     response.write(
@@ -31,24 +32,29 @@ const routes = {
   ) => {
     // async iterator
     for await (const data of request) {
-      const item = JSON.parse(data)
-      const player = new Player(item)
-      const { error, valid } = player.isValid()
+      try {
+        // await Promise.reject('/players:post')
+        const item = JSON.parse(data)
+        const player = new Player(item)
+        const { error, valid } = player.isValid()
 
-      if (!valid) {
-        response.writeHead(400, DEFAULT_HEADER)
-        response.write(JSON.stringify({ error: error.join(', ') }))
+        if (!valid) {
+          response.writeHead(400, DEFAULT_HEADER)
+          response.write(JSON.stringify({ error: error.join(', ') }))
+          return response.end()
+        }
+
+        const id = await playerService.create(player)
+
+        response.writeHead(201, DEFAULT_HEADER)
+        response.write(
+          JSON.stringify({ success: 'User created with success!', id }),
+        )
+
         return response.end()
+      } catch (error) {
+        return handleError(response)(error)
       }
-
-      const id = await playerService.create(player)
-
-      response.writeHead(201, DEFAULT_HEADER)
-      response.write(
-        JSON.stringify({ success: 'User created with success!', id }),
-      )
-
-      return response.end()
     }
   },
   default: (
@@ -58,6 +64,17 @@ const routes = {
     response.write('Hello')
     return response.end()
   },
+}
+
+const handleError = (response: ServerResponse<IncomingMessage>) => {
+  return (error) => {
+    console.log('Deu ruim', error)
+
+    response.writeHead(500, DEFAULT_HEADER)
+    response.write(JSON.stringify({ error: 'Internal server error.' }))
+
+    return response.end()
+  }
 }
 
 const handler = (
@@ -77,7 +94,7 @@ const handler = (
 
   const chosen = routes[key] || routes.default
 
-  return chosen(request, response)
+  return chosen(request, response).catch(handleError(response))
 }
 
 http.createServer(handler).listen(PORT, () => {
